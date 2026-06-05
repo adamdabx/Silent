@@ -1,16 +1,31 @@
 <!DOCTYPE html>
-<html lang="pl">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>Monitor Hałasu</title>
+<title>Noise Monitor</title>
 <style>
+  :root {
+    --bg: #111;
+    --text: #fff;
+    --lamp-off: #333;
+    --lamp-ring: #222;
+    --bar-bg: #2a2a2a;
+  }
+  .day {
+    --bg: #f0f0f0;
+    --text: #111;
+    --lamp-off: #ccc;
+    --lamp-ring: #ddd;
+    --bar-bg: #ddd;
+  }
+
   * { box-sizing: border-box; margin: 0; padding: 0; }
 
   body {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    background: #111;
-    color: #fff;
+    background: var(--bg);
+    color: var(--text);
     min-height: 100dvh;
     display: flex;
     flex-direction: column;
@@ -18,8 +33,45 @@
     justify-content: center;
     gap: 24px;
     padding: 24px;
+    padding-top: 64px;
     user-select: none;
+    transition: background 0.25s, color 0.25s;
   }
+
+  #topbar {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 16px;
+  }
+
+  #lang-btns { display: flex; gap: 6px; }
+
+  .lang-btn {
+    background: none;
+    border: 1px solid currentColor;
+    color: var(--text);
+    opacity: 0.35;
+    border-radius: 4px;
+    padding: 4px 9px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: opacity 0.15s;
+  }
+  .lang-btn.active { opacity: 1; }
+
+  #theme-btn {
+    background: none;
+    border: none;
+    font-size: 1.4rem;
+    cursor: pointer;
+    opacity: 0.7;
+    line-height: 1;
+  }
+  #theme-btn:hover { opacity: 1; }
 
   h1 {
     font-size: 1.1rem;
@@ -29,13 +81,12 @@
     opacity: 0.5;
   }
 
-  /* ── STATUS LAMP ── */
   #lamp {
     width: 180px;
     height: 180px;
     border-radius: 50%;
-    background: #333;
-    box-shadow: 0 0 0 8px #222;
+    background: var(--lamp-off);
+    box-shadow: 0 0 0 8px var(--lamp-ring);
     transition: background 0.12s, box-shadow 0.12s;
     display: flex;
     align-items: center;
@@ -43,10 +94,9 @@
     flex-direction: column;
     gap: 6px;
   }
-
-  #lamp.ok   { background: #22c55e; box-shadow: 0 0 60px #22c55e88, 0 0 0 8px #222; }
-  #lamp.warn { background: #f97316; box-shadow: 0 0 60px #f9731688, 0 0 0 8px #222; }
-  #lamp.loud { background: #ef4444; box-shadow: 0 0 80px #ef444488, 0 0 0 8px #222; }
+  #lamp.ok   { background: #22c55e; box-shadow: 0 0 60px #22c55e88, 0 0 0 8px var(--lamp-ring); }
+  #lamp.warn { background: #f97316; box-shadow: 0 0 60px #f9731688, 0 0 0 8px var(--lamp-ring); }
+  #lamp.loud { background: #ef4444; box-shadow: 0 0 80px #ef444488, 0 0 0 8px var(--lamp-ring); }
 
   #status-text {
     font-size: 0.85rem;
@@ -56,13 +106,13 @@
     opacity: 0;
     transition: opacity 0.15s;
     text-shadow: 0 1px 4px rgba(0,0,0,.4);
+    color: #fff;
   }
-  #lamp.ok   #status-text,
+  #lamp.ok #status-text,
   #lamp.warn #status-text,
   #lamp.loud #status-text { opacity: 1; }
 
-  /* ── CISZEJ BANNER ── */
-  #ciszej {
+  #quiet-banner {
     font-size: 3rem;
     font-weight: 900;
     letter-spacing: 0.15em;
@@ -71,21 +121,17 @@
     display: none;
     text-transform: uppercase;
   }
-  #ciszej.blink { display: block; animation: blink 0.5s step-start infinite; }
+  #quiet-banner.blink { display: block; animation: blink 0.5s step-start infinite; }
+  @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
 
-  @keyframes blink {
-    0%, 100% { opacity: 1; }
-    50%       { opacity: 0; }
-  }
-
-  /* ── LEVEL BAR ── */
   #bar-wrap {
     width: 100%;
     max-width: 340px;
     height: 14px;
-    background: #2a2a2a;
+    background: var(--bar-bg);
     border-radius: 7px;
     overflow: hidden;
+    transition: background 0.25s;
   }
   #bar {
     height: 100%;
@@ -95,7 +141,6 @@
     transition: width 0.08s, background 0.12s;
   }
 
-  /* ── dB READOUT ── */
   #db-readout {
     font-size: 2rem;
     font-weight: 700;
@@ -105,7 +150,6 @@
     opacity: 0.85;
   }
 
-  /* ── SETTINGS ── */
   #settings {
     width: 100%;
     max-width: 340px;
@@ -113,29 +157,21 @@
     flex-direction: column;
     gap: 14px;
   }
-
-  .row {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-  }
-
+  .row { display: flex; align-items: center; gap: 12px; }
   .row label {
     font-size: 0.78rem;
     letter-spacing: 0.05em;
-    opacity: 0.6;
+    opacity: 0.55;
     text-transform: uppercase;
     width: 120px;
     flex-shrink: 0;
   }
-
   .row input[type=range] {
     flex: 1;
     accent-color: #f97316;
     height: 6px;
     cursor: pointer;
   }
-
   .val {
     font-size: 0.85rem;
     font-weight: 700;
@@ -144,7 +180,6 @@
     font-variant-numeric: tabular-nums;
   }
 
-  /* ── START BUTTON ── */
   #start-btn {
     padding: 14px 48px;
     font-size: 1rem;
@@ -174,13 +209,22 @@
 </head>
 <body>
 
-<h1>Monitor Hałasu</h1>
+<div id="topbar">
+  <div id="lang-btns">
+    <button class="lang-btn active" data-lang="en">EN</button>
+    <button class="lang-btn" data-lang="no">NO</button>
+    <button class="lang-btn" data-lang="pl">PL</button>
+  </div>
+  <button id="theme-btn">🌙</button>
+</div>
+
+<h1 id="app-title">Noise Monitor</h1>
 
 <div id="lamp">
   <span id="status-text">–</span>
 </div>
 
-<div id="ciszej">CISZEJ!</div>
+<div id="quiet-banner">QUIET!</div>
 
 <div id="db-readout">– dB</div>
 
@@ -188,37 +232,115 @@
 
 <div id="settings">
   <div class="row">
-    <label>Ok → Ostrzeżenie</label>
+    <label id="label-warn">Ok → Warning</label>
     <input type="range" id="th-warn" min="30" max="90" value="55">
     <span class="val" id="th-warn-val">55 dB</span>
   </div>
   <div class="row">
-    <label>Ostrzeżenie → Głośno</label>
+    <label id="label-loud">Warning → Loud</label>
     <input type="range" id="th-loud" min="40" max="100" value="70">
     <span class="val" id="th-loud-val">70 dB</span>
   </div>
 </div>
 
-<button id="start-btn">Uruchom mikrofon</button>
-<p id="perm-msg">Naciśnij przycisk, a przeglądarka poprosi o dostęp do mikrofonu.</p>
+<button id="start-btn">Start microphone</button>
+<p id="perm-msg">Press the button and the browser will ask for microphone access.</p>
 
 <script>
-  const lamp     = document.getElementById('lamp');
-  const ciszej   = document.getElementById('ciszej');
-  const bar      = document.getElementById('bar');
-  const dbOut    = document.getElementById('db-readout');
-  const statusTx = document.getElementById('status-text');
-  const btn      = document.getElementById('start-btn');
-  const permMsg  = document.getElementById('perm-msg');
+  const T = {
+    en: {
+      title:       'Noise Monitor',
+      ok:          'OK',
+      warn_status: 'A bit loud',
+      loud_status: 'Too loud!',
+      quiet:       'QUIET!',
+      label_warn:  'Ok → Warning',
+      label_loud:  'Warning → Loud',
+      start:       'Start microphone',
+      stop:        'Stop',
+      perm:        'Press the button and the browser will ask for microphone access.',
+      perm_err:    'No microphone access. Check browser permissions.',
+    },
+    no: {
+      title:       'Støymonitor',
+      ok:          'OK',
+      warn_status: 'Litt høy',
+      loud_status: 'For høy!',
+      quiet:       'STILLE!',
+      label_warn:  'Ok → Advarsel',
+      label_loud:  'Advarsel → Høy',
+      start:       'Start mikrofon',
+      stop:        'Stopp',
+      perm:        'Trykk på knappen, og nettleseren vil be om mikrofontilgang.',
+      perm_err:    'Ingen mikrofontilgang. Sjekk nettlesertillatelser.',
+    },
+    pl: {
+      title:       'Monitor Hałasu',
+      ok:          'OK',
+      warn_status: 'Trochę głośno',
+      loud_status: 'Za głośno!',
+      quiet:       'CISZEJ!',
+      label_warn:  'Ok → Ostrzeżenie',
+      label_loud:  'Ostrzeżenie → Głośno',
+      start:       'Uruchom mikrofon',
+      stop:        'Zatrzymaj',
+      perm:        'Naciśnij przycisk, a przeglądarka poprosi o dostęp do mikrofonu.',
+      perm_err:    'Brak dostępu do mikrofonu. Sprawdź uprawnienia w przeglądarce.',
+    }
+  };
 
-  const sliderWarn = document.getElementById('th-warn');
-  const sliderLoud = document.getElementById('th-loud');
-  const valWarn    = document.getElementById('th-warn-val');
-  const valLoud    = document.getElementById('th-loud-val');
+  let lang = 'en';
+  let running = false;
+  let isDark = true;
 
-  let audioCtx, analyser, source, rafId, running = false;
+  const lamp        = document.getElementById('lamp');
+  const quietBanner = document.getElementById('quiet-banner');
+  const bar         = document.getElementById('bar');
+  const dbOut       = document.getElementById('db-readout');
+  const statusTx    = document.getElementById('status-text');
+  const btn         = document.getElementById('start-btn');
+  const permMsg     = document.getElementById('perm-msg');
+  const appTitle    = document.getElementById('app-title');
+  const labelWarn   = document.getElementById('label-warn');
+  const labelLoud   = document.getElementById('label-loud');
+  const sliderWarn  = document.getElementById('th-warn');
+  const sliderLoud  = document.getElementById('th-loud');
+  const valWarn     = document.getElementById('th-warn-val');
+  const valLoud     = document.getElementById('th-loud-val');
+  const themeBtn    = document.getElementById('theme-btn');
 
-  // ── slider sync ──────────────────────────────────────────────
+  function applyLang(l) {
+    lang = l;
+    const t = T[l];
+    document.documentElement.lang = l;
+    appTitle.textContent    = t.title;
+    document.title          = t.title;
+    labelWarn.textContent   = t.label_warn;
+    labelLoud.textContent   = t.label_loud;
+    quietBanner.textContent = t.quiet;
+    btn.textContent = running ? t.stop : t.start;
+    if (!running) permMsg.textContent = t.perm;
+    document.querySelectorAll('.lang-btn').forEach(b =>
+      b.classList.toggle('active', b.dataset.lang === l)
+    );
+    if (running) {
+      const state = lamp.className;
+      statusTx.textContent =
+        state === 'ok'   ? t.ok :
+        state === 'warn' ? t.warn_status : t.loud_status;
+    }
+  }
+
+  document.getElementById('lang-btns').addEventListener('click', e => {
+    if (e.target.dataset.lang) applyLang(e.target.dataset.lang);
+  });
+
+  themeBtn.addEventListener('click', () => {
+    isDark = !isDark;
+    document.body.classList.toggle('day', !isDark);
+    themeBtn.textContent = isDark ? '🌙' : '☀️';
+  });
+
   sliderWarn.addEventListener('input', () => {
     valWarn.textContent = sliderWarn.value + ' dB';
     if (+sliderWarn.value >= +sliderLoud.value) {
@@ -234,9 +356,11 @@
     }
   });
 
-  // ── start / stop ─────────────────────────────────────────────
+  let audioCtx, analyser, source, rafId;
+  const dataArray = new Float32Array(2048);
+
   btn.addEventListener('click', async () => {
-    if (running) { stop(); return; }
+    if (running) { stopAudio(); return; }
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
       audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -246,70 +370,59 @@
       source = audioCtx.createMediaStreamSource(stream);
       source.connect(analyser);
       running = true;
-      btn.textContent = 'Zatrzymaj';
+      btn.textContent = T[lang].stop;
       btn.classList.add('stop');
       permMsg.style.display = 'none';
       tick();
     } catch (e) {
-      permMsg.textContent = 'Brak dostępu do mikrofonu. Sprawdź uprawnienia w przeglądarce.';
+      permMsg.textContent = T[lang].perm_err;
     }
   });
 
-  function stop() {
+  function stopAudio() {
     running = false;
     cancelAnimationFrame(rafId);
     if (source) source.disconnect();
     if (audioCtx) audioCtx.close();
     lamp.className = '';
     statusTx.textContent = '–';
-    ciszej.className = '';
+    quietBanner.className = '';
     bar.style.width = '0%';
     dbOut.textContent = '– dB';
-    btn.textContent = 'Uruchom mikrofon';
+    btn.textContent = T[lang].start;
     btn.classList.remove('stop');
     permMsg.style.display = '';
+    permMsg.textContent = T[lang].perm;
   }
-
-  // ── audio loop ───────────────────────────────────────────────
-  const dataArray = new Float32Array(2048);
 
   function tick() {
     if (!running) return;
     rafId = requestAnimationFrame(tick);
-
     analyser.getFloatTimeDomainData(dataArray);
-
-    // RMS → dB
     let sum = 0;
     for (let i = 0; i < dataArray.length; i++) sum += dataArray[i] * dataArray[i];
     const rms = Math.sqrt(sum / dataArray.length);
     const db  = rms > 0 ? 20 * Math.log10(rms) : -Infinity;
-
-    // map roughly -60..0 dBFS to 0..100 dB "display" scale
     const display = Math.max(0, Math.min(100, db + 80));
-
     const tWarn = +sliderWarn.value;
     const tLoud = +sliderLoud.value;
-
+    const t = T[lang];
     dbOut.textContent = isFinite(db) ? display.toFixed(1) + ' dB' : '– dB';
-
-    // bar width
     bar.style.width = display.toFixed(1) + '%';
-
     if (display >= tLoud) {
       lamp.className = 'loud';
-      statusTx.textContent = 'Za głośno!';
-      ciszej.className = 'blink';
+      statusTx.textContent = t.loud_status;
+      quietBanner.className = 'blink';
       bar.style.background = '#ef4444';
     } else if (display >= tWarn) {
       lamp.className = 'warn';
-      statusTx.textContent = 'Trochę głośno';
-      ciszej.className = '';
+      statusTx.textContent = t.warn_status;
+      quietBanner.className = '';
       bar.style.background = '#f97316';
     } else {
       lamp.className = 'ok';
-      statusTx.textContent = 'OK';
-      ciszej.className = '';
+      statusTx.textContent = t.ok;
+      quietBanner.className = '';
       bar.style.background = '#22c55e';
     }
   }
