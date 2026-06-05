@@ -11,6 +11,8 @@
     --lamp-off: #333;
     --lamp-ring: #222;
     --bar-bg: #2a2a2a;
+    --sel-bg: #1e1e1e;
+    --sel-border: #333;
   }
   .day {
     --bg: #f0f0f0;
@@ -18,6 +20,8 @@
     --lamp-off: #ccc;
     --lamp-ring: #ddd;
     --bar-bg: #ddd;
+    --sel-bg: #e0e0e0;
+    --sel-border: #bbb;
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -31,13 +35,14 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 24px;
+    gap: 22px;
     padding: 24px;
     padding-top: 64px;
     user-select: none;
     transition: background 0.25s, color 0.25s;
   }
 
+  /* ── top bar ── */
   #topbar {
     position: fixed;
     top: 0; left: 0; right: 0;
@@ -46,9 +51,7 @@
     align-items: center;
     padding: 12px 16px;
   }
-
   #lang-btns { display: flex; gap: 6px; }
-
   .lang-btn {
     background: none;
     border: 1px solid currentColor;
@@ -62,7 +65,6 @@
     transition: opacity 0.15s;
   }
   .lang-btn.active { opacity: 1; }
-
   #theme-btn {
     background: none;
     border: none;
@@ -73,6 +75,7 @@
   }
   #theme-btn:hover { opacity: 1; }
 
+  /* ── title ── */
   h1 {
     font-size: 1.1rem;
     font-weight: 500;
@@ -81,9 +84,10 @@
     opacity: 0.5;
   }
 
+  /* ── lamp ── */
   #lamp {
-    width: 180px;
-    height: 180px;
+    width: 170px;
+    height: 170px;
     border-radius: 50%;
     background: var(--lamp-off);
     box-shadow: 0 0 0 8px var(--lamp-ring);
@@ -97,7 +101,6 @@
   #lamp.ok   { background: #22c55e; box-shadow: 0 0 60px #22c55e88, 0 0 0 8px var(--lamp-ring); }
   #lamp.warn { background: #f97316; box-shadow: 0 0 60px #f9731688, 0 0 0 8px var(--lamp-ring); }
   #lamp.loud { background: #ef4444; box-shadow: 0 0 80px #ef444488, 0 0 0 8px var(--lamp-ring); }
-
   #status-text {
     font-size: 0.85rem;
     font-weight: 700;
@@ -112,8 +115,9 @@
   #lamp.warn #status-text,
   #lamp.loud #status-text { opacity: 1; }
 
+  /* ── quiet banner ── */
   #quiet-banner {
-    font-size: 3rem;
+    font-size: 2.8rem;
     font-weight: 900;
     letter-spacing: 0.15em;
     color: #ef4444;
@@ -124,6 +128,7 @@
   #quiet-banner.blink { display: block; animation: blink 0.5s step-start infinite; }
   @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
 
+  /* ── bar ── */
   #bar-wrap {
     width: 100%;
     max-width: 340px;
@@ -141,6 +146,7 @@
     transition: width 0.08s, background 0.12s;
   }
 
+  /* ── dB readout ── */
   #db-readout {
     font-size: 2rem;
     font-weight: 700;
@@ -150,6 +156,7 @@
     opacity: 0.85;
   }
 
+  /* ── settings panel ── */
   #settings {
     width: 100%;
     max-width: 340px;
@@ -157,6 +164,8 @@
     flex-direction: column;
     gap: 14px;
   }
+
+  /* profile select row */
   .row { display: flex; align-items: center; gap: 12px; }
   .row label {
     font-size: 0.78rem;
@@ -166,6 +175,34 @@
     width: 120px;
     flex-shrink: 0;
   }
+
+  #profile-select {
+    flex: 1;
+    background: var(--sel-bg);
+    color: var(--text);
+    border: 1px solid var(--sel-border);
+    border-radius: 8px;
+    padding: 6px 8px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.25s, border-color 0.25s, color 0.25s;
+    appearance: none;
+    -webkit-appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23888' stroke-width='1.8' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    padding-right: 28px;
+  }
+
+  /* divider */
+  .divider {
+    width: 100%;
+    height: 1px;
+    background: var(--sel-border);
+    opacity: 0.4;
+  }
+
   .row input[type=range] {
     flex: 1;
     accent-color: #f97316;
@@ -180,6 +217,7 @@
     font-variant-numeric: tabular-nums;
   }
 
+  /* ── button ── */
   #start-btn {
     padding: 14px 48px;
     font-size: 1rem;
@@ -225,20 +263,27 @@
 </div>
 
 <div id="quiet-banner">QUIET!</div>
-
 <div id="db-readout">– dB</div>
-
 <div id="bar-wrap"><div id="bar"></div></div>
 
 <div id="settings">
+  <!-- profile selector -->
+  <div class="row">
+    <label id="label-profile">Profile</label>
+    <select id="profile-select"></select>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- threshold sliders -->
   <div class="row">
     <label id="label-warn">Ok → Warning</label>
-    <input type="range" id="th-warn" min="30" max="90" value="55">
+    <input type="range" id="th-warn" min="20" max="90" value="55">
     <span class="val" id="th-warn-val">55 dB</span>
   </div>
   <div class="row">
     <label id="label-loud">Warning → Loud</label>
-    <input type="range" id="th-loud" min="40" max="100" value="70">
+    <input type="range" id="th-loud" min="25" max="100" value="70">
     <span class="val" id="th-loud-val">70 dB</span>
   </div>
 </div>
@@ -247,185 +292,272 @@
 <p id="perm-msg">Press the button and the browser will ask for microphone access.</p>
 
 <script>
-  const T = {
-    en: {
-      title:       'Noise Monitor',
-      ok:          'OK',
-      warn_status: 'A bit loud',
-      loud_status: 'Too loud!',
-      quiet:       'QUIET!',
-      label_warn:  'Ok → Warning',
-      label_loud:  'Warning → Loud',
-      start:       'Start microphone',
-      stop:        'Stop',
-      perm:        'Press the button and the browser will ask for microphone access.',
-      perm_err:    'No microphone access. Check browser permissions.',
-    },
-    no: {
-      title:       'Støymonitor',
-      ok:          'OK',
-      warn_status: 'Litt høy',
-      loud_status: 'For høy!',
-      quiet:       'STILLE!',
-      label_warn:  'Ok → Advarsel',
-      label_loud:  'Advarsel → Høy',
-      start:       'Start mikrofon',
-      stop:        'Stopp',
-      perm:        'Trykk på knappen, og nettleseren vil be om mikrofontilgang.',
-      perm_err:    'Ingen mikrofontilgang. Sjekk nettlesertillatelser.',
-    },
-    pl: {
-      title:       'Monitor Hałasu',
-      ok:          'OK',
-      warn_status: 'Trochę głośno',
-      loud_status: 'Za głośno!',
-      quiet:       'CISZEJ!',
-      label_warn:  'Ok → Ostrzeżenie',
-      label_loud:  'Ostrzeżenie → Głośno',
-      start:       'Uruchom mikrofon',
-      stop:        'Zatrzymaj',
-      perm:        'Naciśnij przycisk, a przeglądarka poprosi o dostęp do mikrofonu.',
-      perm_err:    'Brak dostępu do mikrofonu. Sprawdź uprawnienia w przeglądarce.',
+// ── Profile definitions (slider scale 0-100) ────────────────────
+// Scale: display = dBFS + 80. Typical speech ~50-65 on this scale.
+const PROFILES = [
+  { id: 'night',        warn: 28, loud: 38 },
+  { id: 'library',      warn: 35, loud: 46 },
+  { id: 'home',         warn: 45, loud: 58 },
+  { id: 'office',       warn: 52, loud: 66 },
+  { id: 'warehouse',    warn: 65, loud: 78 },
+  { id: 'construction', warn: 76, loud: 88 },
+  { id: 'custom',       warn: null, loud: null },
+];
+
+// ── Translations ─────────────────────────────────────────────────
+const T = {
+  en: {
+    title:       'Noise Monitor',
+    ok:          'OK',
+    warn_status: 'A bit loud',
+    loud_status: 'Too loud!',
+    quiet:       'QUIET!',
+    label_profile:'Profile',
+    label_warn:  'Ok → Warning',
+    label_loud:  'Warning → Loud',
+    start:       'Start microphone',
+    stop:        'Stop',
+    perm:        'Press the button and the browser will ask for microphone access.',
+    perm_err:    'No microphone access. Check browser permissions.',
+    profiles: {
+      night:        '🌙 Night at home',
+      library:      '📚 Library',
+      home:         '🏠 Home',
+      office:       '💼 Office',
+      warehouse:    '📦 Warehouse',
+      construction: '🚧 Construction site',
+      custom:       '⚙️ Custom',
     }
-  };
-
-  let lang = 'en';
-  let running = false;
-  let isDark = true;
-
-  const lamp        = document.getElementById('lamp');
-  const quietBanner = document.getElementById('quiet-banner');
-  const bar         = document.getElementById('bar');
-  const dbOut       = document.getElementById('db-readout');
-  const statusTx    = document.getElementById('status-text');
-  const btn         = document.getElementById('start-btn');
-  const permMsg     = document.getElementById('perm-msg');
-  const appTitle    = document.getElementById('app-title');
-  const labelWarn   = document.getElementById('label-warn');
-  const labelLoud   = document.getElementById('label-loud');
-  const sliderWarn  = document.getElementById('th-warn');
-  const sliderLoud  = document.getElementById('th-loud');
-  const valWarn     = document.getElementById('th-warn-val');
-  const valLoud     = document.getElementById('th-loud-val');
-  const themeBtn    = document.getElementById('theme-btn');
-
-  function applyLang(l) {
-    lang = l;
-    const t = T[l];
-    document.documentElement.lang = l;
-    appTitle.textContent    = t.title;
-    document.title          = t.title;
-    labelWarn.textContent   = t.label_warn;
-    labelLoud.textContent   = t.label_loud;
-    quietBanner.textContent = t.quiet;
-    btn.textContent = running ? t.stop : t.start;
-    if (!running) permMsg.textContent = t.perm;
-    document.querySelectorAll('.lang-btn').forEach(b =>
-      b.classList.toggle('active', b.dataset.lang === l)
-    );
-    if (running) {
-      const state = lamp.className;
-      statusTx.textContent =
-        state === 'ok'   ? t.ok :
-        state === 'warn' ? t.warn_status : t.loud_status;
+  },
+  no: {
+    title:       'Støymonitor',
+    ok:          'OK',
+    warn_status: 'Litt høy',
+    loud_status: 'For høy!',
+    quiet:       'STILLE!',
+    label_profile:'Profil',
+    label_warn:  'Ok → Advarsel',
+    label_loud:  'Advarsel → Høy',
+    start:       'Start mikrofon',
+    stop:        'Stopp',
+    perm:        'Trykk på knappen, og nettleseren vil be om mikrofontilgang.',
+    perm_err:    'Ingen mikrofontilgang. Sjekk nettlesertillatelser.',
+    profiles: {
+      night:        '🌙 Natt hjemme',
+      library:      '📚 Bibliotek',
+      home:         '🏠 Hjemme',
+      office:       '💼 Kontor',
+      warehouse:    '📦 Lager',
+      construction: '🚧 Byggeplass',
+      custom:       '⚙️ Egendefinert',
+    }
+  },
+  pl: {
+    title:       'Monitor Hałasu',
+    ok:          'OK',
+    warn_status: 'Trochę głośno',
+    loud_status: 'Za głośno!',
+    quiet:       'CISZEJ!',
+    label_profile:'Profil',
+    label_warn:  'Ok → Ostrzeżenie',
+    label_loud:  'Ostrzeżenie → Głośno',
+    start:       'Uruchom mikrofon',
+    stop:        'Zatrzymaj',
+    perm:        'Naciśnij przycisk, a przeglądarka poprosi o dostęp do mikrofonu.',
+    perm_err:    'Brak dostępu do mikrofonu. Sprawdź uprawnienia w przeglądarce.',
+    profiles: {
+      night:        '🌙 Dom – noc',
+      library:      '📚 Biblioteka',
+      home:         '🏠 Dom',
+      office:       '💼 Biuro',
+      warehouse:    '📦 Magazyn',
+      construction: '🚧 Plac budowy',
+      custom:       '⚙️ Własne',
     }
   }
+};
 
-  document.getElementById('lang-btns').addEventListener('click', e => {
-    if (e.target.dataset.lang) applyLang(e.target.dataset.lang);
-  });
+// ── State ─────────────────────────────────────────────────────────
+let lang = 'en';
+let running = false;
+let isDark = true;
+let activeProfile = 'home'; // default profile
 
-  themeBtn.addEventListener('click', () => {
-    isDark = !isDark;
-    document.body.classList.toggle('day', !isDark);
-    themeBtn.textContent = isDark ? '🌙' : '☀️';
-  });
+// ── DOM refs ──────────────────────────────────────────────────────
+const lamp        = document.getElementById('lamp');
+const quietBanner = document.getElementById('quiet-banner');
+const bar         = document.getElementById('bar');
+const dbOut       = document.getElementById('db-readout');
+const statusTx    = document.getElementById('status-text');
+const btn         = document.getElementById('start-btn');
+const permMsg     = document.getElementById('perm-msg');
+const appTitle    = document.getElementById('app-title');
+const labelProfile= document.getElementById('label-profile');
+const labelWarn   = document.getElementById('label-warn');
+const labelLoud   = document.getElementById('label-loud');
+const sliderWarn  = document.getElementById('th-warn');
+const sliderLoud  = document.getElementById('th-loud');
+const valWarn     = document.getElementById('th-warn-val');
+const valLoud     = document.getElementById('th-loud-val');
+const profileSel  = document.getElementById('profile-select');
+const themeBtn    = document.getElementById('theme-btn');
 
-  sliderWarn.addEventListener('input', () => {
-    valWarn.textContent = sliderWarn.value + ' dB';
-    if (+sliderWarn.value >= +sliderLoud.value) {
-      sliderLoud.value = +sliderWarn.value + 5;
-      valLoud.textContent = sliderLoud.value + ' dB';
-    }
+// ── Profile helpers ───────────────────────────────────────────────
+function buildProfileOptions() {
+  const t = T[lang];
+  profileSel.innerHTML = '';
+  PROFILES.forEach(p => {
+    const opt = document.createElement('option');
+    opt.value = p.id;
+    opt.textContent = t.profiles[p.id];
+    if (p.id === activeProfile) opt.selected = true;
+    profileSel.appendChild(opt);
   });
-  sliderLoud.addEventListener('input', () => {
+}
+
+function applyProfile(id, fromSlider) {
+  const p = PROFILES.find(x => x.id === id);
+  if (!p) return;
+  activeProfile = id;
+  profileSel.value = id;
+  if (!fromSlider && p.warn !== null) {
+    sliderWarn.value = p.warn;
+    sliderLoud.value = p.loud;
+    valWarn.textContent = p.warn + ' dB';
+    valLoud.textContent = p.loud + ' dB';
+  }
+}
+
+profileSel.addEventListener('change', () => applyProfile(profileSel.value, false));
+
+// ── Language ──────────────────────────────────────────────────────
+function applyLang(l) {
+  lang = l;
+  const t = T[l];
+  document.documentElement.lang = l;
+  document.title          = t.title;
+  appTitle.textContent    = t.title;
+  labelProfile.textContent= t.label_profile;
+  labelWarn.textContent   = t.label_warn;
+  labelLoud.textContent   = t.label_loud;
+  quietBanner.textContent = t.quiet;
+  btn.textContent = running ? t.stop : t.start;
+  if (!running) permMsg.textContent = t.perm;
+  document.querySelectorAll('.lang-btn').forEach(b =>
+    b.classList.toggle('active', b.dataset.lang === l)
+  );
+  buildProfileOptions();
+  if (running) {
+    const state = lamp.className;
+    statusTx.textContent =
+      state === 'ok' ? t.ok : state === 'warn' ? t.warn_status : t.loud_status;
+  }
+}
+
+document.getElementById('lang-btns').addEventListener('click', e => {
+  if (e.target.dataset.lang) applyLang(e.target.dataset.lang);
+});
+
+// ── Theme ─────────────────────────────────────────────────────────
+themeBtn.addEventListener('click', () => {
+  isDark = !isDark;
+  document.body.classList.toggle('day', !isDark);
+  themeBtn.textContent = isDark ? '🌙' : '☀️';
+});
+
+// ── Sliders ───────────────────────────────────────────────────────
+sliderWarn.addEventListener('input', () => {
+  valWarn.textContent = sliderWarn.value + ' dB';
+  if (+sliderWarn.value >= +sliderLoud.value) {
+    sliderLoud.value = +sliderWarn.value + 5;
     valLoud.textContent = sliderLoud.value + ' dB';
-    if (+sliderLoud.value <= +sliderWarn.value) {
-      sliderWarn.value = +sliderLoud.value - 5;
-      valWarn.textContent = sliderWarn.value + ' dB';
-    }
-  });
+  }
+  applyProfile('custom', true);
+});
+sliderLoud.addEventListener('input', () => {
+  valLoud.textContent = sliderLoud.value + ' dB';
+  if (+sliderLoud.value <= +sliderWarn.value) {
+    sliderWarn.value = +sliderLoud.value - 5;
+    valWarn.textContent = sliderWarn.value + ' dB';
+  }
+  applyProfile('custom', true);
+});
 
-  let audioCtx, analyser, source, rafId;
-  const dataArray = new Float32Array(2048);
+// ── Audio ─────────────────────────────────────────────────────────
+let audioCtx, analyser, source, rafId;
+const dataArray = new Float32Array(2048);
 
-  btn.addEventListener('click', async () => {
-    if (running) { stopAudio(); return; }
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
-      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-      analyser = audioCtx.createAnalyser();
-      analyser.fftSize = 2048;
-      analyser.smoothingTimeConstant = 0.6;
-      source = audioCtx.createMediaStreamSource(stream);
-      source.connect(analyser);
-      running = true;
-      btn.textContent = T[lang].stop;
-      btn.classList.add('stop');
-      permMsg.style.display = 'none';
-      tick();
-    } catch (e) {
-      permMsg.textContent = T[lang].perm_err;
-    }
-  });
+btn.addEventListener('click', async () => {
+  if (running) { stopAudio(); return; }
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    analyser = audioCtx.createAnalyser();
+    analyser.fftSize = 2048;
+    analyser.smoothingTimeConstant = 0.6;
+    source = audioCtx.createMediaStreamSource(stream);
+    source.connect(analyser);
+    running = true;
+    btn.textContent = T[lang].stop;
+    btn.classList.add('stop');
+    permMsg.style.display = 'none';
+    tick();
+  } catch (e) {
+    permMsg.textContent = T[lang].perm_err;
+  }
+});
 
-  function stopAudio() {
-    running = false;
-    cancelAnimationFrame(rafId);
-    if (source) source.disconnect();
-    if (audioCtx) audioCtx.close();
-    lamp.className = '';
-    statusTx.textContent = '–';
+function stopAudio() {
+  running = false;
+  cancelAnimationFrame(rafId);
+  if (source) source.disconnect();
+  if (audioCtx) audioCtx.close();
+  lamp.className = '';
+  statusTx.textContent = '–';
+  quietBanner.className = '';
+  bar.style.width = '0%';
+  dbOut.textContent = '– dB';
+  btn.textContent = T[lang].start;
+  btn.classList.remove('stop');
+  permMsg.style.display = '';
+  permMsg.textContent = T[lang].perm;
+}
+
+function tick() {
+  if (!running) return;
+  rafId = requestAnimationFrame(tick);
+  analyser.getFloatTimeDomainData(dataArray);
+  let sum = 0;
+  for (let i = 0; i < dataArray.length; i++) sum += dataArray[i] * dataArray[i];
+  const rms = Math.sqrt(sum / dataArray.length);
+  const db  = rms > 0 ? 20 * Math.log10(rms) : -Infinity;
+  const display = Math.max(0, Math.min(100, db + 80));
+  const tWarn = +sliderWarn.value;
+  const tLoud = +sliderLoud.value;
+  const t = T[lang];
+  dbOut.textContent = isFinite(db) ? display.toFixed(1) + ' dB' : '– dB';
+  bar.style.width = display.toFixed(1) + '%';
+  if (display >= tLoud) {
+    lamp.className = 'loud';
+    statusTx.textContent = t.loud_status;
+    quietBanner.className = 'blink';
+    bar.style.background = '#ef4444';
+  } else if (display >= tWarn) {
+    lamp.className = 'warn';
+    statusTx.textContent = t.warn_status;
     quietBanner.className = '';
-    bar.style.width = '0%';
-    dbOut.textContent = '– dB';
-    btn.textContent = T[lang].start;
-    btn.classList.remove('stop');
-    permMsg.style.display = '';
-    permMsg.textContent = T[lang].perm;
+    bar.style.background = '#f97316';
+  } else {
+    lamp.className = 'ok';
+    statusTx.textContent = t.ok;
+    quietBanner.className = '';
+    bar.style.background = '#22c55e';
   }
+}
 
-  function tick() {
-    if (!running) return;
-    rafId = requestAnimationFrame(tick);
-    analyser.getFloatTimeDomainData(dataArray);
-    let sum = 0;
-    for (let i = 0; i < dataArray.length; i++) sum += dataArray[i] * dataArray[i];
-    const rms = Math.sqrt(sum / dataArray.length);
-    const db  = rms > 0 ? 20 * Math.log10(rms) : -Infinity;
-    const display = Math.max(0, Math.min(100, db + 80));
-    const tWarn = +sliderWarn.value;
-    const tLoud = +sliderLoud.value;
-    const t = T[lang];
-    dbOut.textContent = isFinite(db) ? display.toFixed(1) + ' dB' : '– dB';
-    bar.style.width = display.toFixed(1) + '%';
-    if (display >= tLoud) {
-      lamp.className = 'loud';
-      statusTx.textContent = t.loud_status;
-      quietBanner.className = 'blink';
-      bar.style.background = '#ef4444';
-    } else if (display >= tWarn) {
-      lamp.className = 'warn';
-      statusTx.textContent = t.warn_status;
-      quietBanner.className = '';
-      bar.style.background = '#f97316';
-    } else {
-      lamp.className = 'ok';
-      statusTx.textContent = t.ok;
-      quietBanner.className = '';
-      bar.style.background = '#22c55e';
-    }
-  }
+// ── Init ──────────────────────────────────────────────────────────
+applyLang('en');
+applyProfile('home', false);
 </script>
 </body>
 </html>
